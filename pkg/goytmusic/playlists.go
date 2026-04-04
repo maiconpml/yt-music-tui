@@ -15,11 +15,11 @@ const (
 type PlaylistsService service
 
 type Playlist struct {
-	Name     string
-	BrowseID string
-	NTracks  int
-	Tracks   []*Track
-	Author   *User
+	Name    string
+	ID      string
+	NTracks int
+	Tracks  []*Track
+	Author  *User
 }
 
 // ListLiked retrieves and returns an array of Playlist. This array
@@ -54,7 +54,7 @@ func (s *PlaylistsService) Get(id *string) (*Playlist, error) {
 		return nil, errors.New("Client is not authenticated")
 	}
 	u := "browse"
-	body := s.client.BrowseBody(*id)
+	body := s.client.BrowseBody("VL" + *id)
 	req, err := s.client.NewRequest("POST", u, body)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (s *PlaylistsService) Get(id *string) (*Playlist, error) {
 	}
 
 	pl := extractPlaylistWithTracks(respBody)
-	pl.BrowseID = *id
+	pl.ID = *id
 
 	return pl, nil
 }
@@ -97,8 +97,8 @@ func extractPlaylist(res gjson.Result) *Playlist {
 	}
 
 	pl := &Playlist{
-		Name:     render.Get(joinPaths(pTitle, pRun0, pText)).String(),
-		BrowseID: render.Get(joinPaths(pTitle, pRun0, pNavEndpoint, pBrowseEnd, pBrowseID)).String(),
+		Name: render.Get(joinPaths(pTitle, pRun0, pText)).String(),
+		ID:   strings.TrimPrefix(render.Get(joinPaths(pTitle, pRun0, pNavEndpoint, pBrowseEnd, pBrowseID)).String(), "VL"),
 	}
 
 	author := render.Get(joinPaths(pSubtitle, pRun0))
