@@ -9,6 +9,7 @@ import (
 	"github.com/maiconpml/heylisten/internal/tui/components/home"
 	"github.com/maiconpml/heylisten/internal/tui/components/library"
 	"github.com/maiconpml/heylisten/internal/tui/components/player"
+	"github.com/maiconpml/heylisten/internal/tui/components/playlists"
 	"github.com/maiconpml/heylisten/internal/tui/components/tracks"
 	"github.com/maiconpml/heylisten/internal/tui/keys"
 	"github.com/maiconpml/heylisten/internal/tui/styles"
@@ -152,6 +153,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return ErrorMsg{Err: err}
 			}
 			return player.QueueLoadedMsg{Tracks: tracks, CurTrack: msg.Index, Continuation: contin}
+		}
+
+	case playlists.PlaylistPlayedMsg:
+		return m, func() tea.Msg {
+			cont := ""
+			tracks, contin, err := m.client.Tracks.NextTracksByPlaylist(&msg.PlaylistID, Ptr(cont), msg.Random)
+			if err != nil {
+				return ErrorMsg{Err: err}
+			}
+			return player.QueueLoadedMsg{Tracks: tracks, CurTrack: 0, Continuation: contin}
 		}
 	}
 

@@ -8,6 +8,8 @@ type LibraryKeyMap struct {
 	Select      key.Binding
 	NextSection key.Binding
 	PrevSection key.Binding
+	Play        key.Binding
+	PlayRandom  key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view.
@@ -43,5 +45,13 @@ var LibraryKeys = LibraryKeyMap{
 	PrevSection: key.NewBinding(
 		key.WithKeys("[", "<"),
 		key.WithHelp("[/<", "next section"),
+	),
+	Play: key.NewBinding(
+		key.WithKeys("p"),
+		key.WithHelp("p", "play playlist/music/album"),
+	),
+	PlayRandom: key.NewBinding(
+		key.WithKeys("P"),
+		key.WithHelp("P", "play playlist/album randomly"),
 	),
 }

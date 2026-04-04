@@ -5,9 +5,11 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/maiconpml/heylisten/internal/tui/keys"
 	"github.com/maiconpml/heylisten/internal/tui/styles"
 	"github.com/maiconpml/heylisten/pkg/goytmusic"
 )
@@ -83,6 +85,11 @@ type Model struct {
 
 type PlaylistSelectedMsg struct{ PlaylistID string }
 
+type PlaylistPlayedMsg struct {
+	PlaylistID string
+	Random     bool
+}
+
 func New(playlists []*goytmusic.Playlist) Model {
 	items := make([]list.Item, len(playlists))
 	for i, p := range playlists {
@@ -100,10 +107,26 @@ func New(playlists []*goytmusic.Playlist) Model {
 func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
-	if msg, ok := msg.(tea.KeyMsg); ok && msg.String() == "enter" {
-		if i, ok := m.list.SelectedItem().(item); ok {
-			return m, func() tea.Msg {
-				return PlaylistSelectedMsg{PlaylistID: i.playlist.ID}
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, keys.LibraryKeys.Select):
+			if i, ok := m.list.SelectedItem().(item); ok {
+				return m, func() tea.Msg {
+					return PlaylistSelectedMsg{PlaylistID: i.playlist.ID}
+				}
+			}
+		case key.Matches(msg, keys.LibraryKeys.Play):
+			if i, ok := m.list.SelectedItem().(item); ok {
+				return m, func() tea.Msg {
+					return PlaylistPlayedMsg{PlaylistID: i.playlist.ID, Random: false}
+				}
+			}
+		case key.Matches(msg, keys.LibraryKeys.PlayRandom):
+			if i, ok := m.list.SelectedItem().(item); ok {
+				return m, func() tea.Msg {
+					return PlaylistPlayedMsg{PlaylistID: i.playlist.ID, Random: true}
+				}
 			}
 		}
 	}
