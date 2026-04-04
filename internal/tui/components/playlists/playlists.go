@@ -103,7 +103,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	if msg, ok := msg.(tea.KeyMsg); ok && msg.String() == "enter" {
 		if i, ok := m.list.SelectedItem().(item); ok {
 			return m, func() tea.Msg {
-				return PlaylistSelectedMsg{PlaylistID: i.playlist.BrowseID}
+				return PlaylistSelectedMsg{PlaylistID: i.playlist.ID}
 			}
 		}
 	}
