@@ -27,6 +27,14 @@ func GetCookiePath() (string, error) {
 	return filepath.Join(dir, "cookie.txt"), nil
 }
 
+func GetLogPath() (string, error) {
+	dir, err := GetConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "app.log"), nil
+}
+
 func SaveCookie(rawCookie string) error {
 	path, err := GetCookiePath()
 	if err != nil {

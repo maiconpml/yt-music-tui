@@ -3,6 +3,8 @@ package logger
 import (
 	"log/slog"
 	"os"
+
+	"github.com/maiconpml/heylisten/internal/config"
 )
 
 var logFile *os.File
@@ -10,7 +12,11 @@ var logFile *os.File
 // Init configuress global logger to write to logging file.
 func Init() error {
 	var err error
-	logFile, err = os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	logPath, err := config.GetLogPath()
+	if err != nil {
+		return err
+	}
+	logFile, err = os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}

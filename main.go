@@ -81,7 +81,8 @@ func main() {
 		tea.WithAltScreen(),
 	)
 
-	if f, err := tea.LogToFile("app.log", "tea"); err == nil {
+	logPath, _ := config.GetLogPath()
+	if f, err := tea.LogToFile(logPath, "tea"); err == nil {
 		defer f.Close()
 	}
 
