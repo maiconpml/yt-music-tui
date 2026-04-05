@@ -28,6 +28,7 @@ type Client struct {
 	// Services for each accessible resource of Innertube API
 	Playlists *PlaylistsService
 	Tracks    *TracksService
+	Albums    *AlbumService
 
 	isGuest bool
 

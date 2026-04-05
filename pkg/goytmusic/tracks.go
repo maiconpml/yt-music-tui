@@ -137,6 +137,33 @@ func extractTrackFromQueue(res gjson.Result) *Track {
 }
 
 // Parses res into a Track struct
+// Expects the track contained in browseId=MPRE... endpoint JSON response
+func extractTrackFromAlbum(res gjson.Result) *Track {
+	tr := &Track{}
+
+	tr.Name = res.Get(joinPaths(pRespListItem, pFlexColumn0, pRespListItemFlexColumn, pText, pRun0, pText)).String()
+	buf := res.Get(joinPaths(pRespListItem, pOverlayRenderer, pContent, pMusicPlayButtonRenderer, pPlayNavEndpoint, pWatchEnd))
+	if buf.Exists() {
+		tr.VideoID = Ptr(buf.Get(pVideoID).String())
+		tr.PlaylistID = Ptr(buf.Get(pPlaylistID).String())
+		tr.PlaylistSetVideoID = Ptr(buf.Get(pPlaylistSetVideoID).String())
+	}
+
+	artists := res.Get(joinPaths(pRespListItem, pFlexColumn1, pRespListItemFlexColumn, pText, pRuns))
+	artists.ForEach(func(key, value gjson.Result) bool {
+		pageType := value.Get(joinPaths(pNavEndpoint, pBrowseEnd, pBrowseEndContextPageType)).String()
+		if key.Int()%2 == 0 {
+			if u := extractUser(value); u != nil && pageType == "MUSIC_PAGE_TYPE_ARTIST" {
+				tr.Artists = append(tr.Artists, u)
+			}
+		}
+		return true
+	})
+
+	return tr
+}
+
+// Parses res into a Track struct
 // Expects the track contained in browseId=VLPL... endpoint JSON response
 func extractTrack(res gjson.Result) *Track {
 	tr := &Track{}

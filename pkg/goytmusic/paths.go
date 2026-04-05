@@ -16,6 +16,7 @@ const (
 	pMusicEditablePlaylistHeader = "musicEditablePlaylistDetailHeaderRenderer.header"
 	pSecContents                 = "secondaryContents"
 	pPlaylistShelf               = "musicPlaylistShelfRenderer"
+	pMusicShelf                  = "musicShelfRenderer"
 	pRespListItem                = "musicResponsiveListItemRenderer"
 	pRespListItemFlexColumn      = "musicResponsiveListItemFlexColumnRenderer"
 	pFlexColumn0                 = "flexColumns.0"
