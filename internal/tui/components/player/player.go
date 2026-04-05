@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/progress"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/maiconpml/heylisten/internal/audio"
@@ -17,13 +18,13 @@ import (
 	"github.com/maiconpml/heylisten/pkg/goytmusic"
 )
 
-type TickMsg time.Time
+type PlayerTickMsg time.Time
 
 type TogglePauseMsg struct{}
 
 func tickCmd() tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-		return TickMsg(t)
+		return PlayerTickMsg(t)
 	})
 }
 
@@ -44,6 +45,13 @@ type StreamReadyMsg struct {
 }
 
 type (
+	StreamStartedMsg struct{}
+	StreamErrorMsg   struct {
+		Err error
+	}
+)
+
+type (
 	NextTrackMsg struct{}
 	PrevTrackMsg struct{}
 )
@@ -60,6 +68,7 @@ const (
 type Model struct {
 	status           playerStatus
 	tracks           []*goytmusic.Track
+	spinner          spinner.Model
 	curTrack         int
 	continuation     string
 	continuationType int
@@ -76,11 +85,12 @@ func New() Model {
 		status:   standby,
 		curTrack: -1,
 		progress: prog,
+		spinner:  spinner.New(spinner.WithSpinner(spinner.Points)),
 	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return tickCmd()
+	return tea.Batch(tickCmd(), m.spinner.Tick)
 }
 
 func formatDuration(seconds float64) string {
@@ -110,7 +120,7 @@ func parseDuration(durStr string) float64 {
 }
 
 func (m *Model) prefetchTrack(index int) tea.Cmd {
-	if index <= 0 || index > len(m.tracks) {
+	if index < 0 || index >= len(m.tracks) {
 		return nil
 	}
 
@@ -130,7 +140,7 @@ func (m *Model) prefetchTrack(index int) tea.Cmd {
 }
 
 func (m *Model) playTrack(index int) tea.Cmd {
-	if index < 0 || index > len(m.tracks) {
+	if index < 0 || index >= len(m.tracks) {
 		return nil
 	}
 	m.curTrack = index
@@ -172,7 +182,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.progress.Width = 10
 		}
 
-	case TickMsg:
+	case PlayerTickMsg:
 		cmds = append(cmds, tickCmd())
 		if m.status == playing || m.status == paused {
 			pos, dur, pausd, finished, err := audio.GetProgress()
@@ -194,11 +204,15 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 					if finished || (m.duration > 0 && pos >= m.duration-1) {
 						cmds = append(cmds, func() tea.Msg { return NextTrackMsg{} })
-						return m, tea.Batch(cmds...)
 					}
 				}
 			}
 		}
+
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		cmds = append(cmds, cmd)
 
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
@@ -217,29 +231,39 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	case NextTrackMsg:
 		if m.curTrack+1 < len(m.tracks) {
-			cmds = append(cmds, m.playTrack(m.curTrack+1))
+			cmds = append(cmds, m.playTrack(m.curTrack+1), m.spinner.Tick)
 		}
 	case PrevTrackMsg:
 		if m.curTrack-1 >= 0 {
-			cmds = append(cmds, m.playTrack(m.curTrack-1))
+			cmds = append(cmds, m.playTrack(m.curTrack-1), m.spinner.Tick)
 		}
 	case QueueLoadedMsg:
 		m.tracks = msg.Tracks
 		m.continuation = msg.Continuation
 
-		cmds = append(cmds, m.playTrack(msg.CurTrack))
+		cmds = append(cmds, m.playTrack(msg.CurTrack), m.spinner.Tick)
 
 	case StreamReadyMsg:
-		if msg.Err == nil {
-			if err := audio.PlayStream(msg.Data); err == nil {
-				m.status = playing
-				cmds = append(cmds, m.prefetchTrack(m.curTrack+1))
-			} else {
-				slog.Info("Error on streaming")
-				m.status = standby
-				m.err = err
-			}
+		if msg.Err != nil {
+			m.err = msg.Err
+			m.status = standby
+			return m, nil
 		}
+		return m, func() tea.Msg {
+			if err := audio.PlayStream(msg.Data); err != nil {
+				return StreamErrorMsg{Err: err}
+			}
+			return StreamStartedMsg{}
+		}
+
+	case StreamStartedMsg:
+		m.status = playing
+		cmds = append(cmds, m.prefetchTrack(m.curTrack+1))
+
+	case StreamErrorMsg:
+		slog.Info("Error on streaming", "err", msg.Err)
+		m.status = standby
+		m.err = msg.Err
 
 	case PrefetchCompleteMsg:
 		if msg.Err == nil {
@@ -270,7 +294,7 @@ func (m Model) View() string {
 	} else if m.status == standby || m.curTrack == -1 {
 		line1 = lipgloss.NewStyle().Width(w).Align(lipgloss.Center).Render("▶ Not Playing - No track selected")
 	} else if m.status == downloading {
-		line1 = lipgloss.NewStyle().Width(w).Align(lipgloss.Center).Render("⬇ Downloading: %s...", m.tracks[m.curTrack].Name)
+		line1 = lipgloss.NewStyle().Width(w).Align(lipgloss.Center).Render(m.spinner.View())
 	} else {
 
 		styleLeft := lipgloss.NewStyle().Width(sideWidth).Align(lipgloss.Left)
@@ -292,6 +316,9 @@ func (m Model) View() string {
 		barWidth := centerWidth - 22 // Espaço para "00:00 [bar] 00:00"
 		if barWidth > maxBar {
 			barWidth = maxBar
+		}
+		if barWidth < 10 {
+			barWidth = 10
 		}
 		m.progress.Width = barWidth
 
