@@ -5,6 +5,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/progress"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/maiconpml/heylisten/internal/audio"
@@ -198,10 +200,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Forward messages to active components
 	var cmd tea.Cmd
 
-	switch m.tab {
-	case tabLibrary:
-		m.tabLibrary, cmd = m.tabLibrary.Update(msg)
-		cmds = append(cmds, cmd)
+	isPlayerTickMsg := false
+	switch msg.(type) {
+	case player.PlayerTickMsg, spinner.TickMsg, progress.FrameMsg:
+		isPlayerTickMsg = true
+	}
+
+	if !isPlayerTickMsg {
+		switch m.tab {
+		case tabLibrary:
+			m.tabLibrary, cmd = m.tabLibrary.Update(msg)
+			cmds = append(cmds, cmd)
+		}
 	}
 
 	m.player, cmd = m.player.Update(msg)

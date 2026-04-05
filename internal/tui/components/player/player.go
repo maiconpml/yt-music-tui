@@ -18,13 +18,16 @@ import (
 	"github.com/maiconpml/heylisten/pkg/goytmusic"
 )
 
-type PlayerTickMsg time.Time
+type PlayerTickMsg struct {
+	Time time.Time
+	ID   int
+}
 
 type TogglePauseMsg struct{}
 
-func tickCmd() tea.Cmd {
+func tickCmd(id int) tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-		return PlayerTickMsg(t)
+		return PlayerTickMsg{Time: t, ID: id}
 	})
 }
 
@@ -70,6 +73,7 @@ type Model struct {
 	tracks           []*goytmusic.Track
 	spinner          spinner.Model
 	curTrack         int
+	tickID           int
 	continuation     string
 	continuationType int
 	width            int
@@ -90,7 +94,7 @@ func New() Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(tickCmd(), m.spinner.Tick)
+	return tea.Batch(m.spinner.Tick)
 }
 
 func formatDuration(seconds float64) string {
@@ -147,6 +151,7 @@ func (m *Model) playTrack(index int) tea.Cmd {
 	m.status = downloading
 	m.position = 0
 	m.err = nil
+	m.tickID++
 
 	tr := m.tracks[m.curTrack]
 	m.duration = parseDuration(tr.Duration)
@@ -183,8 +188,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		}
 
 	case PlayerTickMsg:
-		cmds = append(cmds, tickCmd())
-		if m.status == playing || m.status == paused {
+		if (m.status == playing || m.status == paused) && msg.ID == m.tickID {
+			if m.status == playing {
+				cmds = append(cmds, tickCmd(m.tickID))
+			}
 			pos, dur, pausd, finished, err := audio.GetProgress()
 			if err == nil {
 				m.position = pos
@@ -210,6 +217,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		}
 
 	case spinner.TickMsg:
+		if m.status != downloading {
+			return m, nil
+		}
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		cmds = append(cmds, cmd)
@@ -226,6 +236,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				m.status = paused
 			} else {
 				m.status = playing
+				cmds = append(cmds, tickCmd(m.tickID))
 			}
 		}
 
@@ -258,7 +269,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	case StreamStartedMsg:
 		m.status = playing
-		cmds = append(cmds, m.prefetchTrack(m.curTrack+1))
+		cmds = append(cmds, tickCmd(m.tickID), m.prefetchTrack(m.curTrack+1))
 
 	case StreamErrorMsg:
 		slog.Info("Error on streaming", "err", msg.Err)
