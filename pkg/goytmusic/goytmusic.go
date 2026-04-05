@@ -88,6 +88,7 @@ func NewClient(httpClient *http.Client) *Client {
 
 	c.Playlists = (*PlaylistsService)(&c.common)
 	c.Tracks = (*TracksService)(&c.common)
+	c.Albums = (*AlbumService)(&c.common)
 
 	return c
 }
