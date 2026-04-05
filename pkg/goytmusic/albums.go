@@ -15,7 +15,7 @@ const (
 type AlbumService service
 
 type Album struct {
-	BrowseID string
+	ID     string
 	Name   string
 	Year   int
 	Tracks []*Track
@@ -70,8 +70,8 @@ func extractAlbumFromLibrary(res gjson.Result) *Album {
 	}
 
 	ab := &Album{
-		Name:     render.Get(joinPaths(pTitle, pRun0, pText)).String(),
-		BrowseID: strings.TrimPrefix(render.Get(joinPaths(pTitle, pRun0, pNavEndpoint, pBrowseEnd, pBrowseID)).String(), "VL"),
+		Name: render.Get(joinPaths(pTitle, pRun0, pText)).String(),
+		ID:   strings.TrimPrefix(render.Get(joinPaths(pTitle, pRun0, pNavEndpoint, pBrowseEnd, pBrowseID)).String(), "VL"),
 	}
 
 	ab.Author = extractUser(render.Get(joinPaths(pSubtitle, pRun2)))
@@ -88,7 +88,7 @@ func extractAlbum(res *gjson.Result) *Album {
 
 	buf := res.Get(joinPaths(pNavEndpoint, pBrowseEnd, pBrowseID))
 	if buf.Exists() {
-		alb.BrowseID = buf.String()
+		alb.ID = buf.String()
 	}
 	return alb
 }
