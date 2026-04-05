@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/maiconpml/heylisten/internal/audio"
+	"github.com/maiconpml/heylisten/internal/tui/components/albums"
 	"github.com/maiconpml/heylisten/internal/tui/components/home"
 	"github.com/maiconpml/heylisten/internal/tui/components/library"
 	"github.com/maiconpml/heylisten/internal/tui/components/player"
@@ -72,7 +73,7 @@ func (m *Model) updateSizes() {
 
 	footerHeight := lipgloss.Height(m.help.View(m.keys))
 
-	availHeight := m.height - 2 - tabsHeight - playerHeight - footerHeight
+	availHeight := m.height - 3 - tabsHeight - playerHeight - footerHeight
 
 	if availHeight < 0 {
 		availHeight = 0
@@ -91,8 +92,17 @@ func (m *Model) loadLibraryData() tea.Cmd {
 		}
 		return playlists.PlaylistLoadedMsg{Items: pls}
 	}
+	loadAb := func() tea.Msg {
+		abs, err := m.client.Albums.ListLiked()
+		if err != nil {
+			slog.Error("Failed to retrieved liked albums", "err", err)
+			return nil
+		}
+		return albums.AlbumLoadedMsg{Items: abs}
+	}
 	return tea.Batch(loadPl, loadAb)
 }
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
@@ -234,7 +244,7 @@ func (m Model) View() string {
 		searchTab,
 	)
 
-	playerView := styles.RenderContainer("Player", availWidth, m.player.View())
+	playerView := styles.RenderContainer(availWidth, m.player.View(), "Player")
 
 	m.help.ShowAll = false
 	footerHelp := m.help.View(m.keys)
@@ -243,6 +253,7 @@ func (m Model) View() string {
 
 	ui := lipgloss.JoinVertical(lipgloss.Left,
 		tabsView,
+		"",
 		activeView,
 		playerView,
 		footerHelp,

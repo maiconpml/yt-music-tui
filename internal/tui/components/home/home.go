@@ -115,7 +115,7 @@ func (m Model) View() string {
 	}
 	logoView := lipgloss.Place(m.width-4, m.height-2, lipgloss.Center, lipgloss.Center, logo)
 
-	return styles.RenderContainer("", m.width, logoView)
+	return styles.RenderContainer(m.width, logoView, "")
 }
 
 func (m *Model) SetSize(width, height int) {

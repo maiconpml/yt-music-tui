@@ -46,7 +46,7 @@ func Truncate(s string, max int) string {
 	return string(r[:max-3]) + "..."
 }
 
-func RenderContainer(title string, width int, content string) string {
+func RenderContainer(width int, content string, titles ...string) string {
 	if width == 0 {
 		return ""
 	}
@@ -54,14 +54,11 @@ func RenderContainer(title string, width int, content string) string {
 	borderStyle := lipgloss.NewStyle().Foreground(BorderColor)
 	border := lipgloss.RoundedBorder()
 
-	titleStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("230")).
-		Padding(0, 1).
-		Bold(true)
-
 	titleText := ""
-	if title != "" {
-		titleText = titleStyle.Render(title)
+	for _, t := range titles {
+		if t != "" {
+			titleText += borderStyle.Render(border.Top) + " " + t + " "
+		}
 	}
 
 	tl := borderStyle.Render(border.TopLeft)
