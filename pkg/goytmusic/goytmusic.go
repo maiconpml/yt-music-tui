@@ -99,6 +99,7 @@ func (c *Client) WithAuthCookie(cookie string) *Client {
 	sapisid := sapisidFromCookie(cookie)
 
 	c2 := *c
+	c2.httpClient = &http.Client{}
 	*c2.httpClient = *c.httpClient
 	c2.isGuest = (cookie == "")
 	transport := c2.httpClient.Transport
@@ -117,6 +118,12 @@ func (c *Client) WithAuthCookie(cookie string) *Client {
 			return transport.RoundTrip(req) // receiver client transport
 		},
 	)
+
+	c2.common.client = &c2
+	c2.Playlists = (*PlaylistsService)(&c2.common)
+	c2.Tracks = (*TracksService)(&c2.common)
+	c2.Albums = (*AlbumService)(&c2.common)
+
 	return &c2
 }
 
