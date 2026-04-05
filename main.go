@@ -75,15 +75,9 @@ func main() {
 
 	client := goytmusic.NewClient(&http.Client{}).WithAuthCookie(cookieString)
 
-	liked, err := client.Playlists.ListLiked()
-	if err != nil {
-		slog.Error("Failed to list liked playlists", "err", err)
-		os.Exit(1)
-	}
-
 	// Configura o programa com log em arquivo
 	p := tea.NewProgram(
-		tui.NewModel(client, liked),
+		tui.NewModel(client),
 		tea.WithAltScreen(),
 	)
 

@@ -90,19 +90,17 @@ type PlaylistPlayedMsg struct {
 	Random     bool
 }
 
-func New(playlists []*goytmusic.Playlist) Model {
-	items := make([]list.Item, len(playlists))
-	for i, p := range playlists {
-		items[i] = item{playlist: p}
-	}
+func New() Model {
+	items := []list.Item{}
 	l := list.New(items, playlistDelegate{}, 0, 0)
 	l.SetShowTitle(false)
 	l.SetShowHelp(false)
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
-
 	return Model{list: l}
 }
+
+type PlaylistLoadedMsg struct{ Items []*goytmusic.Playlist }
 
 func (m Model) Init() tea.Cmd { return nil }
 
@@ -129,6 +127,13 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				}
 			}
 		}
+	case PlaylistLoadedMsg:
+		items := make([]list.Item, len(msg.Items))
+		for i, p := range msg.Items {
+			items[i] = item{playlist: p}
+		}
+		cmd := m.list.SetItems(items)
+		return m, cmd
 	}
 
 	var cmd tea.Cmd

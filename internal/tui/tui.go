@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"log/slog"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -41,10 +43,10 @@ type Model struct {
 	height     int
 }
 
-func NewModel(client *goytmusic.Client, playlistsData []*goytmusic.Playlist) Model {
+func NewModel(client *goytmusic.Client) Model {
 	return Model{
 		client:     client,
-		tabLibrary: library.New(client, playlistsData),
+		tabLibrary: library.New(client),
 		tabHome:    home.New(),
 		tab:        tabHome,
 		player:     player.New(),
@@ -80,6 +82,17 @@ func (m *Model) updateSizes() {
 	m.tabHome.SetSize(availWidth, availHeight)
 }
 
+func (m *Model) loadLibraryData() tea.Cmd {
+	loadPl := func() tea.Msg {
+		pls, err := m.client.Playlists.ListLiked()
+		if err != nil {
+			slog.Error("Failed to retrieved liked playlists", "err", err)
+			return nil
+		}
+		return playlists.PlaylistLoadedMsg{Items: pls}
+	}
+	return tea.Batch(loadPl, loadAb)
+}
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
@@ -101,15 +114,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.NextTab):
 			m.tab = (m.tab + 1) % 3
+			if m.tab == 1 {
+				cmds = append(cmds, m.loadLibraryData())
+			}
 		case key.Matches(msg, m.keys.PrevTab):
 			m.tab--
 			if m.tab < 0 {
 				m.tab = 2
+			} else if m.tab == 1 {
+				cmds = append(cmds, m.loadLibraryData())
 			}
 		case key.Matches(msg, m.keys.TabHome):
 			m.tab = 0
 		case key.Matches(msg, m.keys.TabLibrary):
 			m.tab = 1
+			cmds = append(cmds, m.loadLibraryData())
 		case key.Matches(msg, m.keys.TabSearch):
 			m.tab = 2
 		case key.Matches(msg, m.keys.PlayPause):

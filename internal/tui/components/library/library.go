@@ -18,7 +18,8 @@ const (
 )
 
 type TracksLoadedMsg struct {
-	Playlist *goytmusic.Playlist
+	Tracks []*goytmusic.Track
+	Title  string
 }
 
 type ErrorMsg struct {
@@ -34,10 +35,10 @@ type Model struct {
 	height    int
 }
 
-func New(client *goytmusic.Client, playlistsData []*goytmusic.Playlist) Model {
+func New(client *goytmusic.Client) Model {
 	return Model{
 		client:    client,
-		playlists: playlists.New(playlistsData),
+		playlists: playlists.New(),
 		tracks:    tracks.New(),
 		state:     stateRoot,
 	}
@@ -68,11 +69,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			if err != nil {
 				return ErrorMsg{Err: err}
 			}
-			return TracksLoadedMsg{Playlist: pl}
+			return TracksLoadedMsg{Tracks: pl.Tracks, Title: pl.Name}
 		}
 
 	case TracksLoadedMsg:
-		m.tracks.SetTracks(msg.Playlist.Tracks, msg.Playlist.Name)
+		m.tracks.SetTracks(msg.Tracks, msg.Title)
 		return m, nil
 	}
 
