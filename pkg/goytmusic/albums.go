@@ -82,7 +82,7 @@ func extractAlbumFromLibrary(res gjson.Result) *Album {
 
 // Parses res into a Album struct
 // Expects the Album contained in browseId=VLPL... JSON response
-func extractAlbum(res *gjson.Result) *Album {
+func extractAlbum(res gjson.Result) *Album {
 	alb := &Album{}
 	alb.Name = res.Get(pText).String()
 

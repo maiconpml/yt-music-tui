@@ -125,7 +125,7 @@ func extractTrackFromQueue(res gjson.Result) *Track {
 				tr.Artists = append(tr.Artists, u)
 			}
 		case "MUSIC_PAGE_TYPE_ALBUM":
-			tr.Album = extractAlbum(&value)
+			tr.Album = extractAlbum(value)
 		}
 
 		return true
@@ -161,7 +161,7 @@ func extractTrack(res gjson.Result) *Track {
 
 	album := res.Get(joinPaths(pRespListItem, pFlexColumn2, pRespListItemFlexColumn, pText, pRun0))
 	if album.Exists() {
-		tr.Album = extractAlbum(&album)
+		tr.Album = extractAlbum(album)
 	}
 
 	return tr
