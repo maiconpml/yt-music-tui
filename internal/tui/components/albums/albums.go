@@ -136,6 +136,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			items[i] = item{album: a}
 		}
 		cmd := m.list.SetItems(items)
+		m.list.SetSize(m.width-styles.ContainerFrameWidth(), m.height-2)
 		return m, cmd
 	}
 

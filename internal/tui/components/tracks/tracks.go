@@ -121,6 +121,7 @@ func (m *Model) SetTracks(tracks []*goytmusic.Track, title string) {
 		items[i] = item{track: tr}
 	}
 	m.list.SetItems(items)
+	m.list.SetSize(m.width-styles.ContainerFrameWidth(), m.height-2)
 	m.title = title
 }
 
