@@ -55,6 +55,11 @@ const (
 	pBrowseEndContextPageType          = "browseEndpointContextSupportedConfigs.browseEndpointContextMusicConfig.pageType"
 	pContinuation                      = "continuations.0.nextContinuationData.continuation"
 	pLengthText                        = "lengthText"
+
+	pMenuMenuRenderer           = "menu.menuRenderer"
+	pItem0                      = "items.0"
+	pMenuNavigationItemRenderer = "menuNavigationItemRenderer"
+	pWatchPlaylistEndpoint      = "watchPlaylistEndpoint"
 )
 
 // joinPaths takes multiple strings s1, s2, ..., sn and join

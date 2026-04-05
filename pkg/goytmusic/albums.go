@@ -3,7 +3,6 @@ package goytmusic
 import (
 	"errors"
 	"strconv"
-	"strings"
 
 	"github.com/tidwall/gjson"
 )
@@ -15,11 +14,12 @@ const (
 type AlbumService service
 
 type Album struct {
-	ID     string
-	Name   string
-	Year   int
-	Tracks []*Track
-	Author *User
+	ID         string
+	PlaylistID string
+	Name       string
+	Year       int
+	Tracks     []*Track
+	Author     *User
 }
 
 // ListLiked retrieves and returns an array of Playlist. This array
@@ -93,8 +93,9 @@ func extractAlbumFromLibrary(res gjson.Result) *Album {
 	}
 
 	ab := &Album{
-		Name: render.Get(joinPaths(pTitle, pRun0, pText)).String(),
-		ID:   strings.TrimPrefix(render.Get(joinPaths(pTitle, pRun0, pNavEndpoint, pBrowseEnd, pBrowseID)).String(), "VL"),
+		Name:       render.Get(joinPaths(pTitle, pRun0, pText)).String(),
+		ID:         render.Get(joinPaths(pTitle, pRun0, pNavEndpoint, pBrowseEnd, pBrowseID)).String(),
+		PlaylistID: render.Get(joinPaths(pMenuMenuRenderer, pItem0, pMenuNavigationItemRenderer, pNavEndpoint, pWatchPlaylistEndpoint, pPlaylistID)).String(),
 	}
 
 	ab.Author = extractUser(render.Get(joinPaths(pSubtitle, pRun2)))
@@ -119,6 +120,7 @@ func extractAlbumWithTracks(b []byte) *Album {
 		}
 		return true
 	})
+	ab.PlaylistID = *ab.Tracks[0].PlaylistID
 	return ab
 }
 
