@@ -1,6 +1,11 @@
 package keys
 
-import "github.com/charmbracelet/bubbles/key"
+import (
+	"strings"
+
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/lipgloss"
+)
 
 type KeyMap struct {
 	PlayPause  key.Binding
@@ -18,19 +23,96 @@ type KeyMap struct {
 	Back       key.Binding
 }
 
+type HelpSection struct {
+	Title    string
+	Bindings []key.Binding
+}
+
+func RenderVerticalHelp(sections []HelpSection) string {
+	var sb strings.Builder
+
+	titleStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("62")).Bold(true).MarginBottom(1)
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("255")).Bold(true).Width(12).Align(lipgloss.Right)
+	descStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240")).PaddingLeft(1)
+
+	for i, sec := range sections {
+		if i > 0 {
+			sb.WriteString("\n")
+		}
+		sb.WriteString(titleStyle.Render(sec.Title) + "\n")
+		for _, b := range sec.Bindings {
+			if !b.Enabled() {
+				continue
+			}
+			h := b.Help()
+			line := lipgloss.JoinHorizontal(lipgloss.Top, keyStyle.Render(h.Key), descStyle.Render(h.Desc))
+			sb.WriteString(line + "\n")
+		}
+	}
+
+	return sb.String()
+}
+
 // ShortHelp returns keybindings to be shown in the mini help view.
 // Ordered by importance, ending with the toggle help command.
 func (k KeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.PlayPause, k.NextTrack, k.Quit, k.Help}
+	return []key.Binding{k.Help, k.NextTab, k.PlayPause, k.NextTrack, k.Back, k.Quit}
 }
 
 // FullHelp returns keybindings for the expanded help view.
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.NextTab, k.PrevTab, k.Back},
-		{k.PlayPause, k.NextTrack, k.PrevTrack, k.VolUp, k.VolDown},
-		{k.Help, k.Quit},
+		{k.NextTab, k.PrevTab, k.Back, k.TabHome, k.TabLibrary, k.TabSearch},
+		{k.PlayPause, k.NextTrack, k.PrevTrack, k.VolUp, k.VolDown, k.Help, k.Quit},
 	}
+}
+
+func (k KeyMap) VerticalHelp() []HelpSection {
+	return []HelpSection{
+		{
+			Title:    "Navigation",
+			Bindings: []key.Binding{k.NextTab, k.PrevTab, k.TabHome, k.TabLibrary, k.TabSearch, k.Back},
+		},
+		{
+			Title:    "Playback",
+			Bindings: []key.Binding{k.PlayPause, k.NextTrack, k.PrevTrack, k.VolUp, k.VolDown},
+		},
+		{
+			Title:    "App",
+			Bindings: []key.Binding{k.Help, k.Quit},
+		},
+	}
+}
+
+type MergedKeyMap struct {
+	Global  KeyMap
+	Library LibraryKeyMap
+}
+
+func (k MergedKeyMap) ShortHelp() []key.Binding {
+	// Combine most important global keys and library keys
+	return []key.Binding{k.Global.Help, k.Global.NextTab, k.Global.PlayPause, k.Library.Select, k.Library.Play, k.Global.Back, k.Global.Quit}
+}
+
+func (k MergedKeyMap) FullHelp() [][]key.Binding {
+	full := k.Global.FullHelp()
+	full = append(full, k.Library.FullHelp()...)
+	return full
+}
+
+func (k MergedKeyMap) VerticalHelp() []HelpSection {
+	sections := k.Global.VerticalHelp()
+
+	libSection := HelpSection{
+		Title:    "Library",
+		Bindings: []key.Binding{k.Library.Up, k.Library.Down, k.Library.Select, k.Library.NextSection, k.Library.PrevSection, k.Library.Play, k.Library.PlayRandom},
+	}
+
+	newSections := append([]HelpSection{}, sections[:2]...)
+	newSections = append(newSections, libSection)
+	newSections = append(newSections, sections[2:]...)
+
+	return newSections
 }
 
 var Keys = KeyMap{
@@ -71,7 +153,7 @@ var Keys = KeyMap{
 	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
-		key.WithHelp("?", "more"),
+		key.WithHelp("?", "keybinds"),
 	),
 	Back: key.NewBinding(
 		key.WithKeys("esc", "backspace"),

@@ -15,13 +15,13 @@ type LibraryKeyMap struct {
 // ShortHelp returns keybindings to be shown in the mini help view.
 // Ordered by importance, ending with the toggle help command.
 func (k LibraryKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Select, k.NextSection, k.PrevSection}
+	return []key.Binding{k.Select, k.Play, k.PlayRandom, k.NextSection}
 }
 
 // FullHelp returns keybindings for the expanded help view.
 func (k LibraryKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Select, k.NextSection, k.PrevSection},
+		{k.Up, k.Down, k.Select, k.NextSection, k.PrevSection, k.Play, k.PlayRandom},
 	}
 }
 
@@ -44,7 +44,7 @@ var LibraryKeys = LibraryKeyMap{
 	),
 	PrevSection: key.NewBinding(
 		key.WithKeys("[", "<"),
-		key.WithHelp("[/<", "next section"),
+		key.WithHelp("[/<", "prev section"),
 	),
 	Play: key.NewBinding(
 		key.WithKeys("p"),

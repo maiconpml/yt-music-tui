@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/maiconpml/heylisten/internal/audio"
@@ -41,6 +42,7 @@ type Model struct {
 	tabHome    home.Model
 	player     player.Model
 	help       help.Model
+	viewport   viewport.Model
 	keys       keys.KeyMap
 	width      int
 	height     int
@@ -54,6 +56,7 @@ func NewModel(client *goytmusic.Client) Model {
 		tab:        tabHome,
 		player:     player.New(),
 		help:       help.New(),
+		viewport:   viewport.New(0, 0),
 		keys:       keys.Keys,
 	}
 }
@@ -105,6 +108,21 @@ func (m *Model) loadLibraryData() tea.Cmd {
 	return tea.Batch(loadPl, loadAb)
 }
 
+func (m *Model) updateHelpViewport() {
+	var sections []keys.HelpSection
+	if m.tab == tabLibrary {
+		merged := keys.MergedKeyMap{Global: m.keys, Library: keys.LibraryKeys}
+		sections = merged.VerticalHelp()
+	} else {
+		sections = m.keys.VerticalHelp()
+	}
+	helpContent := keys.RenderVerticalHelp(sections)
+	
+	m.viewport.Width = min(m.width-10, 50)
+	m.viewport.Height = min(lipgloss.Height(helpContent), m.height-10)
+	m.viewport.SetContent(helpContent)
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
@@ -119,7 +137,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.help.ShowAll = false
 				return m, nil
 			}
-			return m, nil
+			var cmd tea.Cmd
+			m.viewport, cmd = m.viewport.Update(msg)
+			return m, cmd
 		}
 		switch {
 		case key.Matches(msg, m.keys.Quit):
@@ -155,13 +175,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			audio.DecrVolume()
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
+			if m.help.ShowAll {
+				m.updateHelpViewport()
+			}
 			return m, nil
 		}
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.help.Width = msg.Width
+		m.help.Width = msg.Width - 4
+
+		if m.help.ShowAll {
+			m.updateHelpViewport()
+		}
 
 		availWidth := msg.Width - 4
 		availHeight := msg.Height - 2
@@ -257,7 +284,12 @@ func (m Model) View() string {
 	playerView := styles.RenderContainer(availWidth, m.player.View(), "Player")
 
 	m.help.ShowAll = false
-	footerHelp := m.help.View(m.keys)
+	var helpMap help.KeyMap = m.keys
+	if m.tab == tabLibrary {
+		helpMap = keys.MergedKeyMap{Global: m.keys, Library: keys.LibraryKeys}
+	}
+	m.help.Width = availWidth
+	footerHelp := m.help.View(helpMap)
 
 	m.help.ShowAll = isHelpOpen
 
@@ -269,11 +301,25 @@ func (m Model) View() string {
 		footerHelp,
 	)
 
-	background := lipgloss.NewStyle().Padding(0, 2).Render(ui)
+	background := lipgloss.NewStyle().
+		Padding(0, 2).
+		Width(m.width).
+		Height(m.height).
+		Render(ui)
 
 	if isHelpOpen {
-		helpContent := m.help.View(m.keys)
-		modal := styles.ModalStyle.Render(helpContent)
+		helpHeader := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			Italic(true).
+			Render(" ↑/↓ Scroll • Esc/? Close")
+
+		viewContent := lipgloss.JoinVertical(lipgloss.Center,
+			helpHeader,
+			"",
+			m.viewport.View(),
+		)
+
+		modal := styles.ModalStyle.Render(viewContent)
 
 		return overlay.Composite(
 			modal,
@@ -283,7 +329,6 @@ func (m Model) View() string {
 			0, 0,
 		)
 	}
-
 	return background
 }
 

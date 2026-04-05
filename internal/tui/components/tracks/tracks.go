@@ -5,9 +5,11 @@ import (
 	"io"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/maiconpml/heylisten/internal/tui/keys"
 	"github.com/maiconpml/heylisten/internal/tui/styles"
 	"github.com/maiconpml/heylisten/pkg/goytmusic"
 )
@@ -135,8 +137,8 @@ func (m Model) Title() string {
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "enter":
+		switch {
+		case key.Matches(msg, keys.LibraryKeys.Select):
 			index := m.list.Index()
 			if i, ok := m.list.SelectedItem().(item); ok {
 				return m, func() tea.Msg {
