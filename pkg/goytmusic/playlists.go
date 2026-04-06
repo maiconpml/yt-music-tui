@@ -42,10 +42,7 @@ func (s *PlaylistsService) ListLiked() ([]*Playlist, error) {
 
 	items := extractPlaylists(respBody)
 
-	if len(items) > 2 {
-		return items[2:], nil
-	}
-	return nil, nil
+	return items[1:], nil
 }
 
 // Get retrieves and returns the Playlist having the provided id.
