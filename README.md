@@ -26,6 +26,36 @@ For the best experience, it is highly recommended to use a modern, GPU-accelerat
 
 ## Installation
 
+### Via Release
+
+Follow these steps to download and set up the binary via your terminal:
+
+#### 1. Download the Release
+
+Download the latest version directly using `curl` (replace `v0.1.0-alpha` with the version you wish to install):
+
+```bash
+curl -LO https://github.com/maiconpml/heylisten/releases/download/v0.1.0-alpha/heylisten_Linux_x86_64.tar.gz
+```
+
+#### 2. Extraction
+
+Extract the executable from the compressed file:
+
+```bash
+tar -xzf heylisten_Linux_x86_64.tar.gz
+```
+
+#### 3. System Installation
+
+Move the binary to `/usr/local/bin`. This allows you to run `heylisten` from anywhere in your system:
+
+```bash
+sudo install -m 755 heylisten /usr/local/bin/heylisten
+```
+
+### From Source
+
 1. Clone the repository:
 
    ```bash
