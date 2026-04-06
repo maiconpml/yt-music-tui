@@ -1,10 +1,12 @@
 # Hey Listen
 
-
 <video src="https://github.com/user-attachments/assets/aec20f98-7273-44ac-92cc-366864cdcf22" controls="controls" style="max-width: 100%;" autoplay="autoplay" loop="loop" muted="muted">
 </video>
 
-Hey Listen is a Terminal User Interface (TUI) client for YouTube Music written in Go. It allows you to browse your favorite playlists, albums, and tracks, and listen to music directly from your terminal with a minimalist and efficient interface.
+Hey Listen is a Terminal User Interface (TUI) client for YouTube Music written in Go, built using the [Bubble Tea](https://github.com/charmbracelet/bubbletea) framework. It allows you to browse your favorite playlists, albums, and tracks, and listen to music directly from your terminal with a minimalist and efficient interface.
+
+> [!CAUTION]
+> This project is an unofficial client and has no official relationship with YouTube or Google. Using third-party clients may violate YouTube's Terms of Service, which could lead to account restrictions or other retaliatory actions. The author is not responsible for any consequences resulting from the use of this software.
 
 ## Features
 
@@ -19,8 +21,8 @@ Hey Listen is a Terminal User Interface (TUI) client for YouTube Music written i
 Before you begin, ensure you have the following installed:
 
 1. Go (version 1.25.7 or superior).
-2. yt-dlp: To download audio streams.
-3. FFmpeg: Required for audio extraction and conversion by yt-dlp.
+2. [yt-dlp](https://github.com/yt-dlp/yt-dlp): To download audio streams.
+3. [FFmpeg](https://ffmpeg.org/): Required for audio extraction and conversion by yt-dlp.
 4. Audio Libraries: On Linux, you may need ALSA or PulseAudio development headers (e.g., libasound2-dev on Debian/Ubuntu).
 5. Nerd Font: Required to correctly render icons used in the interface (e.g., JetBrainsMono Nerd Font).
 
