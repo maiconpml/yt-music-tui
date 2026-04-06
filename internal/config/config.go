@@ -35,6 +35,37 @@ func GetLogPath() (string, error) {
 	return filepath.Join(dir, "app.log"), nil
 }
 
+func GetAuthUserPath() (string, error) {
+	dir, err := GetConfigDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "authuser.txt"), nil
+}
+
+func SaveAuthUser(authUser string) error {
+	path, err := GetAuthUserPath()
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, []byte(strings.TrimSpace(authUser)), 0o644)
+}
+
+func LoadAuthUser() (string, error) {
+	path, err := GetAuthUserPath()
+	if err != nil {
+		return "", err
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
+}
+
 func SaveCookie(rawCookie string) error {
 	path, err := GetCookiePath()
 	if err != nil {

@@ -41,6 +41,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	authUserPath, err := config.GetAuthUserPath()
+	if err != nil {
+		slog.Error("Error getting authuser path", "err", err)
+		os.Exit(1)
+	}
+
 	if _, err := os.Stat(cookiePath); os.IsNotExist(err) {
 		fmt.Printf("No authentication cookie found. Please paste your YouTube Music cookie string:\n> ")
 		reader := bufio.NewReader(os.Stdin)
@@ -61,9 +67,34 @@ func main() {
 		fmt.Println("Cookie saved successfully!")
 	}
 
+	if _, err := os.Stat(authUserPath); os.IsNotExist(err) {
+		fmt.Printf("No AuthUser found. Please enter your X-Goog-Authuser value (usually 0):\n> ")
+		reader := bufio.NewReader(os.Stdin)
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			slog.Error("Error reading input", "err", err)
+			os.Exit(1)
+		}
+		input = strings.TrimSpace(input)
+		if input == "" {
+			input = "0"
+		}
+		if err := config.SaveAuthUser(input); err != nil {
+			slog.Error("Error saving authuser", "err", err)
+			os.Exit(1)
+		}
+		fmt.Println("AuthUser saved successfully!")
+	}
+
 	cookieString, err := config.LoadCookie()
 	if err != nil {
 		slog.Error("Error loading cookie", "err", err)
+		os.Exit(1)
+	}
+
+	authUser, err := config.LoadAuthUser()
+	if err != nil {
+		slog.Error("Error loading authuser", "err", err)
 		os.Exit(1)
 	}
 
@@ -73,7 +104,7 @@ func main() {
 	}
 	defer ytdlp.CleanCache()
 
-	client := goytmusic.NewClient(&http.Client{}).WithAuthCookie(cookieString)
+	client := goytmusic.NewClient(&http.Client{}).WithAuth(cookieString, authUser)
 
 	// Configura o programa com log em arquivo
 	p := tea.NewProgram(
