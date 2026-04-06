@@ -83,7 +83,7 @@ To access your private playlists and liked music, Hey Listen requires your YouTu
    ./heylisten
    ```
 
-6. Paste the cookie string when prompted. It will be saved to ~/.config/yt-music-tui/cookie.txt.
+6. Paste the cookie string when prompted. It will be saved to ~/.config/heylisten/cookie.txt.
 
 ## Usage
 

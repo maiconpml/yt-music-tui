@@ -59,7 +59,7 @@ func Init(cookiePath string) error {
 		cacheDir = os.TempDir()
 	}
 
-	activeCacheDir = filepath.Join(cacheDir, "yt-music-tui")
+	activeCacheDir = filepath.Join(cacheDir, "heylisten")
 	if err := os.MkdirAll(activeCacheDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create cache directory: %v", err)
 	}

@@ -12,7 +12,7 @@ func GetConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(configDir, "yt-music-tui")
+	dir := filepath.Join(configDir, "heylisten")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
