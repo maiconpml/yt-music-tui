@@ -1,5 +1,9 @@
 # Hey Listen
 
+
+<video src="https://github.com/user-attachments/assets/aec20f98-7273-44ac-92cc-366864cdcf22" controls="controls" style="max-width: 100%;" autoplay="autoplay" loop="loop" muted="muted">
+</video>
+
 Hey Listen is a Terminal User Interface (TUI) client for YouTube Music written in Go. It allows you to browse your favorite playlists, albums, and tracks, and listen to music directly from your terminal with a minimalist and efficient interface.
 
 ## Features
