@@ -94,8 +94,8 @@ func NewClient(httpClient *http.Client) *Client {
 	return c
 }
 
-// WithAuthCookie returns a copy of client configured with authentication cookie
-func (c *Client) WithAuthCookie(cookie string) *Client {
+// WithAuth returns a copy of client configured with authentication cookie and auth user
+func (c *Client) WithAuth(cookie string, authUser string) *Client {
 	sapisid := sapisidFromCookie(cookie)
 
 	c2 := *c
@@ -109,6 +109,10 @@ func (c *Client) WithAuthCookie(cookie string) *Client {
 			req = req.Clone(req.Context())
 
 			req.Header.Set("Cookie", cookie)
+
+			if authUser != "" {
+				req.Header.Set("X-Goog-Authuser", authUser)
+			}
 
 			if sapisid != "" {
 				h := sapisidHash(sapisid)

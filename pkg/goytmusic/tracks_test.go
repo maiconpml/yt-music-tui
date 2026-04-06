@@ -12,11 +12,12 @@ func TestExtractTracksFromQueue(t *testing.T) {
 
 	if *update {
 		cookie := os.Getenv("AUTH_COOKIE")
+		authUser := os.Getenv("AUTH_USER")
 		if cookie == "" {
 			t.Fatal("AUTH_COOKIE not configured. Impossible to update testdata.")
 		}
 
-		client := NewClient(nil).WithAuthCookie(cookie)
+		client := NewClient(nil).WithAuth(cookie, authUser)
 
 		body := struct {
 			PlaylistID string  `json:"playlistId"`

@@ -14,11 +14,12 @@ func TestListLikedPlaylistsExtraction(t *testing.T) {
 
 	if *update {
 		cookie := os.Getenv("AUTH_COOKIE")
+		authUser := os.Getenv("AUTH_USER")
 		if cookie == "" {
 			t.Fatal("AUTH_COOKIE not configured. Impossible to update testdata.")
 		}
 
-		client := NewClient(nil).WithAuthCookie(cookie)
+		client := NewClient(nil).WithAuth(cookie, authUser)
 
 		req, _ := client.NewRequest("POST", "browse?prettyPrint=false", client.BrowseBody(brIDLikedPlaylists))
 		body, _, err := client.Do(req)
@@ -51,11 +52,12 @@ func TestGetPlaylistExtraction(t *testing.T) {
 
 	if *update {
 		cookie := os.Getenv("AUTH_COOKIE")
+		authUser := os.Getenv("AUTH_USER")
 		if cookie == "" {
 			t.Fatal("AUTH_COOKIE not configured. Impossible to update testdata.")
 		}
 
-		client := NewClient(nil).WithAuthCookie(cookie)
+		client := NewClient(nil).WithAuth(cookie, authUser)
 
 		req, _ := client.NewRequest("POST", "browse?prettyPrint=false", client.BrowseBody(playlistBrowseID))
 		body, _, err := client.Do(req)
